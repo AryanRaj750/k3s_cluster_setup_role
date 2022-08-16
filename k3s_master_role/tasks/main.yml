@@ -1,0 +1,37 @@
+---
+- name: "k3s master node setup"
+  block:
+
+    - name: "update apt-get"
+      shell: "apt-get update && sudo apt-get upgrade -y"
+
+    - name: "updating hostname"
+      shell: "hostnamectl set-hostname `curl -s http://169.254.169.254/latest/meta-data/instance-id`"
+
+    - name: "installing k3s master..."
+      shell: 'curl -sfL https://get.k3s.io | sh -s - --cluster-init --node-ip `hostname -i | awk "{print $1}"`                                                        --advertise-address `hostname -i | awk "{print $1}"`    --kubelet-arg="cloud-provider=external"                                                         --flannel-backend=none  --disable-cloud-controller     --disable=servicelb --disable=traefik   --write-kubeconfig-mode 644                              --kubelet-arg="provider-id=aws:///`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)/$(curl -s http://169.254.169.254/latest/meta-data/instance-id)`"'
+
+    - name: "Deploying aws required node handler resource"
+      command: "kubectl apply -f https://github.com/aws/aws-node-termination-handler/releases/download/v1.13.3/all-resources.yaml"
+
+    - name: "deploying aws rbac controller"
+      command: "kubectl apply -f https://raw.githubusercontent.com/rahul-yadav-hub/K3s-aws/main/aws/rbac.yml"
+
+    - name: "installing aws cloud controller"
+      command: "kubectl apply -f https://raw.githubusercontent.com/rahul-yadav-hub/K3s-aws/main/aws/aws-cloud-controller-manager-daemonset.yml"
+    
+    - name: "Deploying calico cni"
+      command: "kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml"
+
+    - name: "generate new token"
+      command: "sudo cat /var/lib/rancher/k3s/server/node-token"
+      register: token
+
+    - name: "Add dummy  host"
+      add_host:
+          name: "Dummy_Host"
+          token: "{{ token.stdout_lines[0] }}"
+  rescue:
+    - name: "debuging..."
+      debug:
+          msg: "It look likes master node is already configured. To execute remaining task uncomment ignore_errors module."

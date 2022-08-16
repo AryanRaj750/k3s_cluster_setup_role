@@ -1,0 +1,1 @@
+master_private_ip: "10.0.1.5"  # ip master is not running in the same vpc or have different region then put public_ip

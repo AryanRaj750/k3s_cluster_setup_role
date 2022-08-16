@@ -1,0 +1,15 @@
+---
+- name: "k8s multi-worker setup"
+  block:
+     - name: "update apt-get"
+       shell: "apt-get update && sudo apt-get upgrade -y"
+
+     - name: "updating hostname"
+       shell: "hostnamectl set-hostname `curl -s http://169.254.169.254/latest/meta-data/instance-id`"
+
+     - name: "join workner node to master node"
+       shell: "curl -sfL https://get.k3s.io | K3S_TOKEN={{ hostvars['Dummy_Host']['token'] }}                                                                          K3S_URL=https://{{ master_private_ip }}:6443 sh -s - agent --node-ip `hostname -i | awk '{print $1}'`                                                 --kubelet-arg='provider-id=aws:///`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)/$(curl -s http://169.254.169.254/latest/meta-data/instance-id)`'"
+  rescue:
+     - name: "why failed, debuging..."
+       debug:
+           msg: "It looks like your workerNode is already joined. Make ensure by running command 'kubectl get nodes -o wide' on your masterNode"

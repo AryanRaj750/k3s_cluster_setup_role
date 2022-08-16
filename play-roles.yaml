@@ -1,0 +1,12 @@
+--- 
+- hosts: master
+  become: true
+  gather_facts: false
+  roles: 
+  - k3s_master_role
+
+- hosts: worker
+  become: true
+  gather_facts: false
+  roles:
+  - k3s_worker_role  
