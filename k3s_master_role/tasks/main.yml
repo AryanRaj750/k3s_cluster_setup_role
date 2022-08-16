@@ -9,7 +9,12 @@
       shell: "hostnamectl set-hostname `curl -s http://169.254.169.254/latest/meta-data/instance-id`"
 
     - name: "installing k3s master..."
-      shell: 'curl -sfL https://get.k3s.io | sh -s - --cluster-init --node-ip `hostname -i | awk "{print $1}"`                                                        --advertise-address `hostname -i | awk "{print $1}"`    --kubelet-arg="cloud-provider=external"                                                         --flannel-backend=none  --disable-cloud-controller     --disable=servicelb --disable=traefik   --write-kubeconfig-mode 644                              --kubelet-arg="provider-id=aws:///`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)/$(curl -s http://169.254.169.254/latest/meta-data/instance-id)`"'
+      shell: 'curl -sfL https://get.k3s.io | sh -s - --cluster-init \
+         --node-ip `hostname -i | awk "{print $1}"` \
+         --advertise-address `hostname -i | awk "{print $1}"` \
+         --kubelet-arg="cloud-provider=external"--flannel-backend=none --disable-cloud-controller \
+         --disable=servicelb --disable=traefik   --write-kubeconfig-mode 644 \
+         --kubelet-arg="provider-id=aws:///`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)/$(curl -s http://169.254.169.254/latest/meta-data/instance-id)`"'
 
     - name: "Deploying aws required node handler resource"
       command: "kubectl apply -f https://github.com/aws/aws-node-termination-handler/releases/download/v1.13.3/all-resources.yaml"
